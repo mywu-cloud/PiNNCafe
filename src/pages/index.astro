@@ -1,48 +1,58 @@
 ---
-// src/pages/index.astro
-// Quant-Lab Investment Dashboard
+// src/pages/index.astro — Quant-Lab Investment Dashboard
 const lastSync = new Date().toLocaleString("zh-TW", {
-  timeZone: "Asia/Taipei",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
+  timeZone: "Asia/Taipei", year: "numeric", month: "2-digit",
+  day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit",
 });
-
 const stocks = [
-  { name: "台積電", code: "2330", pe: 18.2, price: 920, change: "+1.2%" },
+  { name: "台積電", code: "2330", pe: 18.2, price: 920,  change: "+1.2%" },
   { name: "聯發科", code: "2454", pe: 21.5, price: 1150, change: "-0.8%" },
   { name: "鴻海",   code: "2317", pe: 12.3, price: 185,  change: "+2.1%" },
   { name: "富邦金", code: "2881", pe: 9.8,  price: 88,   change: "+0.5%" },
   { name: "中鋼",   code: "2002", pe: 14.6, price: 28,   change: "-1.3%" },
 ];
-
 const announcements = [
   "📊 2025 Q1 財報季開始，注意個股業績發布",
   "🔔 台股加權指數今日突破 22,000 點關卡",
   "⚙️ 系統更新：新增 RSI 超買超賣警示功能",
 ];
+const barHeights = [55, 65, 58, 72, 68, 80, 75, 88, 82, 95, 90, 100];
+const statsCards = [
+  { label: "成交量",   value: "3,241億", color: "text-slate-300"  },
+  { label: "漲停家數", value: "127",     color: "text-emerald-400" },
+  { label: "跌停家數", value: "23",      color: "text-red-400"    },
+];
+const filterTags = ["PE < 25", "ROE > 15%", "近月漲幅 > 0"];
+const services = [
+  { name: "台股行情爬蟲", status: "正常",  ok: true,  detail: "每 5 分鐘更新" },
+  { name: "財務數據同步", status: "正常",  ok: true,  detail: "每日 18:00"   },
+  { name: "PE 篩選引擎",  status: "正常",  ok: true,  detail: "即時運算"      },
+  { name: "Email 警示",   status: "待機中", ok: false, detail: "無觸發條件"   },
+];
+const sysStats = [
+  { label: "今日請求次數", value: "1,284",  icon: "📡" },
+  { label: "資料筆數",     value: "98.7 萬", icon: "💾" },
+  { label: "平均回應時間", value: "142ms",  icon: "⚡" },
+  { label: "系統可用率",   value: "99.98%", icon: "✅" },
+];
 ---
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Quant-Lab — 數據驅動台股投資儀表板" />
   <title>Quant-Lab | 數據驅動投資</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
+  <!-- Tailwind CSS via CDN (is:inline not needed for src scripts) -->
+  <script is:inline src="https://cdn.tailwindcss.com"></script>
+  <script is:inline>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
             brand: { primary: "#00d4ff", secondary: "#0ea5e9", accent: "#f59e0b", success: "#10b981", danger: "#ef4444" },
             dark:  { 900: "#070b14", 800: "#0d1626", 700: "#111e33", 600: "#1a2a45", 500: "#243756" }
-          },
-          animation: { "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite", "fade-in": "fadeIn 0.6s ease-out forwards" },
-          keyframes: { fadeIn: { "0%": { opacity: "0", transform: "translateY(20px)" }, "100%": { opacity: "1", transform: "translateY(0)" } } }
+          }
         }
       }
     }
@@ -51,282 +61,228 @@ const announcements = [
     @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap");
     * { font-family: "Inter", "Noto Sans TC", sans-serif; }
     body { background-color: #070b14; }
-    .glass { background: rgba(13,22,38,0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(0,212,255,0.12); }
-    .glass-hover:hover { background: rgba(13,22,38,0.9); border-color: rgba(0,212,255,0.3); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,212,255,0.1); }
-    .glow-text  { text-shadow: 0 0 30px rgba(0,212,255,0.4); }
-    .glow-border{ box-shadow: 0 0 20px rgba(0,212,255,0.15); }
-    .grid-bg {
-      background-image: linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px), linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);
-      background-size: 40px 40px;
-    }
-    .scrollbar-thin::-webkit-scrollbar { width: 4px; }
-    .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.3); border-radius: 2px; }
+    .glass { background: rgba(13,22,38,.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(0,212,255,.12); }
+    .glass-hover:hover { background: rgba(13,22,38,.9); border-color: rgba(0,212,255,.3); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,212,255,.1); }
+    .glow-text  { text-shadow: 0 0 30px rgba(0,212,255,.4); }
+    .glow-border{ box-shadow: 0 0 20px rgba(0,212,255,.15); }
+    .grid-bg { background-image: linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px), linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px); background-size: 40px 40px; }
     .nav-link { position: relative; }
-    .nav-link::after { content:""; position:absolute; bottom:-2px; left:0; width:0; height:2px; background:linear-gradient(90deg,#00d4ff,#0ea5e9); transition:width 0.3s ease; }
-    .nav-link:hover::after, .nav-link.active::after { width:100%; }
+    .nav-link::after { content:""; position:absolute; bottom:-2px; left:0; width:0; height:2px; background:linear-gradient(90deg,#00d4ff,#0ea5e9); transition:width .3s ease; }
+    .nav-link:hover::after,.nav-link.active::after { width:100%; }
     .status-dot { width:8px; height:8px; border-radius:50%; background:#10b981; animation:pulse-green 2s ease-in-out infinite; }
-    @keyframes pulse-green { 0%,100%{ box-shadow:0 0 0 0 rgba(16,185,129,0.4); } 50%{ box-shadow:0 0 0 8px rgba(16,185,129,0); } }
-    .chart-bar { background:linear-gradient(180deg,#00d4ff 0%,#0ea5e9 100%); border-radius:3px 3px 0 0; transition:all 0.3s ease; }
+    @keyframes pulse-green { 0%,100%{ box-shadow:0 0 0 0 rgba(16,185,129,.4); } 50%{ box-shadow:0 0 0 8px rgba(16,185,129,0); } }
+    .chart-bar { background:linear-gradient(180deg,#00d4ff 0%,#0ea5e9 100%); border-radius:3px 3px 0 0; }
     .chart-bar:hover { filter:brightness(1.3); }
-    .table-row { transition:all 0.2s ease; }
-    .table-row:hover { background:rgba(0,212,255,0.06); }
-    .search-glow:focus { box-shadow:0 0 0 2px rgba(0,212,255,0.4); }
+    .table-row:hover { background:rgba(0,212,255,.06); }
+    .search-glow:focus { box-shadow:0 0 0 2px rgba(0,212,255,.4); outline:none; }
   </style>
 </head>
 <body class="min-h-screen text-slate-200 grid-bg overflow-x-hidden">
 
-  <!-- ═══════ 頂部導覽列 ═══════ -->
-  <nav class="sticky top-0 z-50 glass border-b border-slate-700/50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-
-        <!-- Logo -->
-        <div class="flex items-center gap-3 group cursor-pointer">
-          <div class="relative w-9 h-9">
-            <div class="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"></div>
-            <div class="absolute inset-0 flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
-              </svg>
-            </div>
+<!-- ══ NAV ══ -->
+<nav class="sticky top-0 z-50 glass border-b border-slate-700/50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 group cursor-pointer">
+        <div class="relative w-9 h-9">
+          <div class="absolute inset-0 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+            </svg>
           </div>
-          <span class="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent glow-text tracking-wide">Quant-Lab</span>
         </div>
+        <span class="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent glow-text">Quant-Lab</span>
+      </div>
+      <!-- Desktop Nav -->
+      <div class="hidden md:flex items-center gap-8">
+        <a href="#market"   class="nav-link active text-sm font-medium text-cyan-400 py-1">大盤分析</a>
+        <a href="#strategy" class="nav-link text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors py-1">選股策略</a>
+        <a href="#about"    class="nav-link text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors py-1">關於我</a>
+      </div>
+      <!-- Right: status + hamburger -->
+      <div class="flex items-center gap-4">
+        <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400"><div class="status-dot"></div><span>系統運行中</span></div>
+        <button class="md:hidden p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/50" id="menu-btn" aria-label="選單">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Mobile menu -->
+  <div class="hidden" id="mobile-menu">
+    <div class="px-4 pt-2 pb-4 space-y-1 border-t border-slate-700/50">
+      <a href="#market"   class="block px-3 py-2 rounded-lg text-sm text-cyan-400 bg-cyan-400/10">大盤分析</a>
+      <a href="#strategy" class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-700/50">選股策略</a>
+      <a href="#about"    class="block px-3 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-700/50">關於我</a>
+    </div>
+  </div>
+</nav>
 
-        <!-- 桌面版導覽 -->
-        <div class="hidden md:flex items-center gap-8">
-          <a href="#market"   class="nav-link active text-sm font-medium text-cyan-400 transition-colors py-1">大盤分析</a>
-          <a href="#strategy" class="nav-link text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors py-1">選股策略</a>
-          <a href="#about"    class="nav-link text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors py-1">關於我</a>
-        </div>
-
-        <!-- 右側狀態 + 漢堡選單 -->
-        <div class="flex items-center gap-4">
-          <div class="hidden sm:flex items-center gap-2 text-xs text-slate-400"><div class="status-dot"></div><span>系統運行中</span></div>
-          <button class="md:hidden p-2 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all" id="menu-btn" aria-label="選單">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-          </button>
+<!-- ══ HERO ══ -->
+<section class="relative py-16 sm:py-24 px-4 overflow-hidden">
+  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="relative max-w-7xl mx-auto text-center">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 mb-6 rounded-full glass border border-cyan-500/20 text-xs font-medium text-cyan-400">
+      <div class="status-dot" style="width:6px;height:6px;"></div>即時數據更新中
+    </div>
+    <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold mb-4 leading-tight">
+      <span class="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">數據驅動</span>
+      <span class="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent glow-text block sm:inline">投資</span>
+    </h1>
+    <p class="text-slate-400 text-lg sm:text-xl mb-10 max-w-2xl mx-auto font-light">整合台股即時數據、量化策略與自動化監控，為您的投資決策提供科學支持</p>
+    <!-- Search -->
+    <div class="max-w-2xl mx-auto mb-10">
+      <div class="relative flex items-center">
+        <div class="absolute left-4 text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
+        <input type="text" placeholder="搜尋股票代號或名稱（如：2330 台積電）..." class="search-glow w-full pl-12 pr-32 py-4 glass border border-slate-700/50 rounded-xl text-sm text-slate-200 placeholder-slate-500"/>
+        <button class="absolute right-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-semibold rounded-lg transition-all duration-200">搜尋</button>
+      </div>
+    </div>
+    <!-- Announcements -->
+    <div class="max-w-3xl mx-auto glass rounded-xl overflow-hidden">
+      <div class="flex items-start">
+        <div class="flex-shrink-0 px-4 py-3 bg-amber-500/20 border-r border-amber-500/20"><span class="text-amber-400 text-xs font-bold tracking-wider">最新公告</span></div>
+        <div class="flex-1 px-4 py-3 space-y-1">
+          {announcements.map((item) => (<p class="text-xs text-slate-400">{item}</p>))}
         </div>
       </div>
     </div>
-    <!-- 手機版下拉選單 -->
-    <div class="hidden md:hidden" id="mobile-menu">
-      <div class="px-4 pt-2 pb-4 space-y-2 border-t border-slate-700/50">
-        <a href="#market"   class="block px-3 py-2 rounded-lg text-sm font-medium text-cyan-400 bg-cyan-400/10">大盤分析</a>
-        <a href="#strategy" class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all">選股策略</a>
-        <a href="#about"    class="block px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 transition-all">關於我</a>
+  </div>
+</section>
+
+<!-- ══ CARDS ══ -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+  <div class="flex items-center gap-4 mb-8">
+    <h2 class="text-lg font-semibold text-slate-300">市場總覽</h2>
+    <div class="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent"></div>
+    <span class="text-xs text-slate-500">更新於 {lastSync}</span>
+  </div>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Card A: Market -->
+    <div class="glass glass-hover rounded-2xl p-6 transition-all duration-300 glow-border" id="market">
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 rounded-lg bg-cyan-500/10"><svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg></div>
+          <h3 class="text-sm font-semibold text-slate-200">今日台股大盤走勢</h3>
+        </div>
+        <span class="text-xs text-emerald-400 font-medium bg-emerald-400/10 px-2 py-1 rounded-full">▲ 1.24%</span>
+      </div>
+      <div class="mb-5">
+        <div class="text-3xl font-bold text-white mb-1">22,186 <span class="text-lg font-normal text-emerald-400">+271</span></div>
+        <div class="text-xs text-slate-500">加權股價指數（TAIEX）</div>
+      </div>
+      <!-- Mini Bar Chart -->
+      <div class="mb-5 rounded-xl bg-slate-800/40 p-3">
+        <div class="flex items-end justify-between gap-1 h-24">
+          {barHeights.map((h) => (<div class="chart-bar flex-1" style={`height: ${h}%`}></div>))}
+        </div>
+        <div class="flex justify-between mt-2 text-xs text-slate-600"><span>09:00</span><span>10:30</span><span>12:00</span><span>13:30</span></div>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        {statsCards.map(item => (
+          <div class="text-center p-2 rounded-lg bg-slate-800/40">
+            <div class={`text-sm font-semibold ${item.color}`}>{item.value}</div>
+            <div class="text-xs text-slate-500 mt-0.5">{item.label}</div>
+          </div>
+        ))}
       </div>
     </div>
-  </nav>
 
-  <!-- ═══════ Hero 主視覺區 ═══════ -->
-  <section class="relative py-16 sm:py-24 px-4 overflow-hidden">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-blue-600/5 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="relative max-w-7xl mx-auto text-center">
-
-      <!-- 即時徽章 -->
-      <div class="inline-flex items-center gap-2 px-4 py-1.5 mb-6 rounded-full glass border border-cyan-500/20 text-xs font-medium text-cyan-400">
-        <div class="status-dot w-2 h-2"></div>即時數據更新中
+    <!-- Card B: Stock List -->
+    <div class="glass glass-hover rounded-2xl p-6 transition-all duration-300" id="strategy">
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 rounded-lg bg-violet-500/10"><svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></div>
+          <h3 class="text-sm font-semibold text-slate-200">最新選股清單</h3>
+        </div>
+        <span class="text-xs text-violet-400 font-medium bg-violet-400/10 px-2 py-1 rounded-full">PE &lt; 25</span>
       </div>
-
-      <!-- 主標題 -->
-      <h1 class="text-4xl sm:text-5xl lg:text-7xl font-extrabold mb-4 leading-tight">
-        <span class="bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">數據驅動</span>
-        <span class="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent glow-text block sm:inline">投資</span>
-      </h1>
-      <p class="text-slate-400 text-lg sm:text-xl mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-        整合台股即時數據、量化策略與自動化監控<br class="hidden sm:block"/>為您的投資決策提供科學支持
-      </p>
-
-      <!-- 搜尋框 -->
-      <div class="max-w-2xl mx-auto mb-10">
-        <div class="relative flex items-center">
-          <div class="absolute left-4 text-slate-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          </div>
-          <input type="text" placeholder="搜尋股票代號或名稱（如：2330 台積電）..."
-            class="search-glow w-full pl-12 pr-32 py-4 glass border border-slate-700/50 rounded-xl text-sm text-slate-200 placeholder-slate-500 outline-none transition-all"/>
-          <button class="absolute right-2 px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-sm font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-cyan-500/25">搜尋</button>
-        </div>
+      <div class="flex flex-wrap gap-2 mb-4">
+        {filterTags.map(tag => (<span class="text-xs px-2.5 py-1 rounded-full bg-slate-700/60 text-slate-400 border border-slate-600/50">{tag}</span>))}
       </div>
-
-      <!-- 最新公告 -->
-      <div class="max-w-3xl mx-auto glass rounded-xl overflow-hidden">
-        <div class="flex items-center">
-          <div class="flex-shrink-0 px-4 py-3 bg-amber-500/20 border-r border-amber-500/20">
-            <span class="text-amber-400 text-xs font-bold tracking-wider">最新公告</span>
-          </div>
-          <div class="flex-1 overflow-hidden px-4 py-3 space-y-1">
-            {announcements.map((item, idx) => (
-              <p class={`text-xs text-slate-400 ${idx === 0 ? "" : "hidden sm:block"}`}>{item}</p>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════ 核心卡片區 ═══════ -->
-  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-    <div class="flex items-center gap-4 mb-8">
-      <h2 class="text-lg font-semibold text-slate-300">市場總覽</h2>
-      <div class="flex-1 h-px bg-gradient-to-r from-slate-700 to-transparent"></div>
-      <span class="text-xs text-slate-500">更新於 {lastSync}</span>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-      <!-- 卡片 A：今日台股大盤走勢 -->
-      <div class="glass glass-hover rounded-2xl p-6 transition-all duration-300 glow-border" id="market">
-        <div class="flex items-center justify-between mb-5">
-          <div class="flex items-center gap-2.5">
-            <div class="p-2 rounded-lg bg-cyan-500/10">
-              <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-            </div>
-            <h3 class="text-sm font-semibold text-slate-200">今日台股大盤走勢</h3>
-          </div>
-          <span class="text-xs text-emerald-400 font-medium bg-emerald-400/10 px-2 py-1 rounded-full">▲ 1.24%</span>
-        </div>
-        <div class="mb-5">
-          <div class="text-3xl font-bold text-white mb-1">22,186 <span class="text-lg font-normal text-emerald-400">+271</span></div>
-          <div class="text-xs text-slate-500">加權股價指數（TAIEX）</div>
-        </div>
-        <!-- 迷你長條圖 -->
-        <div class="mb-5 rounded-xl overflow-hidden bg-slate-800/40 p-3">
-          <div class="flex items-end justify-between gap-1 h-24">
-            {[55,65,58,72,68,80,75,88,82,95,90,100].map((h) => (
-              <div class="chart-bar flex-1" style={`height: ${h}%`}></div>
-            ))}
-          </div>
-          <div class="flex justify-between mt-2 text-xs text-slate-600">
-            <span>09:00</span><span>10:30</span><span>12:00</span><span>13:30</span>
-          </div>
-        </div>
-        <div class="grid grid-cols-3 gap-3">
-          {[
-            { label: "成交量",  value: "3,241億", color: "text-slate-300" },
-            { label: "漲停家數", value: "127",     color: "text-emerald-400" },
-            { label: "跌停家數", value: "23",      color: "text-red-400" },
-          ].map(item => (
-            <div class="text-center p-2 rounded-lg bg-slate-800/40">
-              <div class={`text-sm font-semibold ${item.color}`}>{item.value}</div>
-              <div class="text-xs text-slate-500 mt-0.5">{item.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <!-- 卡片 B：最新選股清單（PE < 25） -->
-      <div class="glass glass-hover rounded-2xl p-6 transition-all duration-300" id="strategy">
-        <div class="flex items-center justify-between mb-5">
-          <div class="flex items-center gap-2.5">
-            <div class="p-2 rounded-lg bg-violet-500/10">
-              <svg class="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-            </div>
-            <h3 class="text-sm font-semibold text-slate-200">最新選股清單</h3>
-          </div>
-          <span class="text-xs text-violet-400 font-medium bg-violet-400/10 px-2 py-1 rounded-full">PE &lt; 25</span>
-        </div>
-        <div class="flex flex-wrap gap-2 mb-4">
-          {["PE < 25","ROE > 15%","近月漲幅 > 0"].map(tag => (
-            <span class="text-xs px-2.5 py-1 rounded-full bg-slate-700/60 text-slate-400 border border-slate-600/50">{tag}</span>
-          ))}
-        </div>
-        <div class="overflow-hidden rounded-xl border border-slate-700/50">
-          <table class="w-full text-xs">
-            <thead>
-              <tr class="border-b border-slate-700/50 bg-slate-800/50">
-                <th class="py-2.5 px-3 text-left font-medium text-slate-400">股票</th>
-                <th class="py-2.5 px-3 text-right font-medium text-slate-400">PE</th>
-                <th class="py-2.5 px-3 text-right font-medium text-slate-400">股價</th>
-                <th class="py-2.5 px-3 text-right font-medium text-slate-400">漲跌</th>
+      <div class="overflow-hidden rounded-xl border border-slate-700/50">
+        <table class="w-full text-xs">
+          <thead><tr class="border-b border-slate-700/50 bg-slate-800/50">
+            <th class="py-2.5 px-3 text-left font-medium text-slate-400">股票</th>
+            <th class="py-2.5 px-3 text-right font-medium text-slate-400">PE</th>
+            <th class="py-2.5 px-3 text-right font-medium text-slate-400">股價</th>
+            <th class="py-2.5 px-3 text-right font-medium text-slate-400">漲跌</th>
+          </tr></thead>
+          <tbody class="divide-y divide-slate-700/30">
+            {stocks.map(s => (
+              <tr class="table-row cursor-pointer transition-colors">
+                <td class="py-3 px-3"><div class="font-semibold text-slate-200">{s.name}</div><div class="text-slate-500">{s.code}</div></td>
+                <td class="py-3 px-3 text-right"><span class={`font-medium ${s.pe < 15 ? "text-emerald-400" : "text-slate-300"}`}>{s.pe}</span></td>
+                <td class="py-3 px-3 text-right font-medium text-slate-200">NT$ {s.price.toLocaleString()}</td>
+                <td class="py-3 px-3 text-right"><span class={`font-semibold ${s.change.startsWith("+") ? "text-emerald-400" : "text-red-400"}`}>{s.change}</span></td>
               </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-700/30">
-              {stocks.map(stock => (
-                <tr class="table-row cursor-pointer">
-                  <td class="py-3 px-3"><div class="font-semibold text-slate-200">{stock.name}</div><div class="text-slate-500">{stock.code}</div></td>
-                  <td class="py-3 px-3 text-right"><span class={`font-medium ${stock.pe < 15 ? "text-emerald-400" : "text-slate-300"}`}>{stock.pe}</span></td>
-                  <td class="py-3 px-3 text-right font-medium text-slate-200">NT$ {stock.price.toLocaleString()}</td>
-                  <td class="py-3 px-3 text-right"><span class={`font-semibold ${stock.change.startsWith("+") ? "text-emerald-400" : "text-red-400"}`}>{stock.change}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <button class="mt-4 w-full py-2.5 rounded-xl border border-violet-500/30 text-violet-400 text-xs font-medium hover:bg-violet-500/10 transition-all duration-200">查看完整選股清單 →</button>
+            ))}
+          </tbody>
+        </table>
       </div>
+      <button class="mt-4 w-full py-2.5 rounded-xl border border-violet-500/30 text-violet-400 text-xs font-medium hover:bg-violet-500/10 transition-all">查看完整選股清單 →</button>
+    </div>
 
-      <!-- 卡片 C：系統自動化狀態 -->
-      <div class="glass glass-hover rounded-2xl p-6 transition-all duration-300">
-        <div class="flex items-center justify-between mb-5">
-          <div class="flex items-center gap-2.5">
-            <div class="p-2 rounded-lg bg-emerald-500/10">
-              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
-            </div>
-            <h3 class="text-sm font-semibold text-slate-200">系統自動化狀態</h3>
+    <!-- Card C: System Status -->
+    <div class="glass glass-hover rounded-2xl p-6 transition-all duration-300">
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 rounded-lg bg-emerald-500/10"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg></div>
+          <h3 class="text-sm font-semibold text-slate-200">系統自動化狀態</h3>
+        </div>
+        <div class="flex items-center gap-1.5"><div class="status-dot"></div><span class="text-xs text-emerald-400">運行中</span></div>
+      </div>
+      <div class="mb-5 p-4 rounded-xl bg-slate-800/60 border border-emerald-500/20">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs text-slate-500">最後同步時間</span>
+          <svg class="w-4 h-4 text-emerald-400" style="animation:spin 3s linear infinite" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </div>
+        <div class="text-base font-semibold text-emerald-400">{lastSync}</div>
+      </div>
+      <div class="space-y-3 mb-5">
+        {services.map(svc => (
+          <div class="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0">
+            <div><div class="text-xs font-medium text-slate-200">{svc.name}</div><div class="text-xs text-slate-500">{svc.detail}</div></div>
+            <span class={`text-xs font-medium px-2 py-0.5 rounded-full ${svc.ok ? "text-emerald-400 bg-emerald-400/10" : "text-amber-400 bg-amber-400/10"}`}>{svc.status}</span>
           </div>
-          <div class="flex items-center gap-1.5"><div class="status-dot"></div><span class="text-xs text-emerald-400">運行中</span></div>
-        </div>
-        <div class="mb-5 p-4 rounded-xl bg-slate-800/60 border border-emerald-500/20">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs text-slate-500">最後同步時間</span>
-            <svg class="w-4 h-4 text-emerald-400 animate-spin" style="animation-duration:3s" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        ))}
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        {sysStats.map(s => (
+          <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/30">
+            <div class="text-lg mb-1">{s.icon}</div>
+            <div class="text-sm font-semibold text-slate-200">{s.value}</div>
+            <div class="text-xs text-slate-500">{s.label}</div>
           </div>
-          <div class="text-base font-semibold text-emerald-400">{lastSync}</div>
-        </div>
-        <div class="space-y-3 mb-5">
-          {[
-            { name: "台股行情爬蟲", status: "正常",  ok: true,  detail: "每 5 分鐘更新" },
-            { name: "財務數據同步", status: "正常",  ok: true,  detail: "每日 18:00"   },
-            { name: "PE 篩選引擎", status: "正常",  ok: true,  detail: "即時運算"      },
-            { name: "Email 警示通知", status: "待機中", ok: false, detail: "無觸發條件" },
-          ].map(service => (
-            <div class="flex items-center justify-between py-2 border-b border-slate-700/30 last:border-0">
-              <div><div class="text-xs font-medium text-slate-200">{service.name}</div><div class="text-xs text-slate-500">{service.detail}</div></div>
-              <span class={`text-xs font-medium px-2 py-0.5 rounded-full ${service.ok ? "text-emerald-400 bg-emerald-400/10" : "text-amber-400 bg-amber-400/10"}`}>{service.status}</span>
-            </div>
-          ))}
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          {[
-            { label: "今日請求次數",   value: "1,284",  icon: "📡" },
-            { label: "資料筆數",       value: "98.7 萬", icon: "💾" },
-            { label: "平均回應時間",   value: "142ms",  icon: "⚡" },
-            { label: "系統可用率",     value: "99.98%", icon: "✅" },
-          ].map(stat => (
-            <div class="p-3 rounded-xl bg-slate-800/40 border border-slate-700/30">
-              <div class="text-lg mb-1">{stat.icon}</div>
-              <div class="text-sm font-semibold text-slate-200">{stat.value}</div>
-              <div class="text-xs text-slate-500">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ═══════ Footer ═══════ -->
-  <footer class="border-t border-slate-800/60 py-8 px-4">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <span class="text-sm font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Quant-Lab</span>
-        <span class="text-slate-600">|</span>
-        <span class="text-sm text-slate-500">PiNNCafe.com</span>
-      </div>
-      <p class="text-xs text-slate-600">© 2025 Quant-Lab. 本網站資訊僅供參考，不構成投資建議。</p>
+<!-- ══ FOOTER ══ -->
+<footer class="border-t border-slate-800/60 py-8 px-4">
+  <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <span class="text-sm font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Quant-Lab</span>
+      <span class="text-slate-600">|</span>
+      <span class="text-sm text-slate-500">PiNNCafe.com</span>
     </div>
-  </footer>
+    <p class="text-xs text-slate-600">© 2025 Quant-Lab. 本網站資訊僅供參考，不構成投資建議。</p>
+  </div>
+</footer>
 
-  <script>
-    const menuBtn = document.getElementById("menu-btn");
-    const mobileMenu = document.getElementById("mobile-menu");
-    if (menuBtn && mobileMenu) {
-      menuBtn.addEventListener("click", () => { mobileMenu.classList.toggle("hidden"); });
-    }
-  </script>
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 
+<script is:inline>
+  var btn = document.getElementById("menu-btn");
+  var menu = document.getElementById("mobile-menu");
+  if (btn && menu) btn.addEventListener("click", function() { menu.classList.toggle("hidden"); });
+</script>
 </body>
 </html>
